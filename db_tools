@@ -1,0 +1,11 @@
+#! /usr/bin/env bash
+
+docker run -it --rm --network mbs3_default \
+--user $(id -u):$(id -g) -v /home/$(whoami):/home/$(whoami)  \
+--workdir /home/$(whoami) \
+-v /etc/passwd:/etc/passwd:ro -v /etc/shadow:/etc/shadow:ro \
+-v /etc/group:/etc/group:ro \
+-e PGHOST=db \
+-e PGUSER=ebooks \
+-e PGDATABASE=ebooks \
+postgres:15.3 bash
