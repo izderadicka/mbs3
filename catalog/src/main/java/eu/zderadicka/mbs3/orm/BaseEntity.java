@@ -3,7 +3,6 @@ package eu.zderadicka.mbs3.orm;
 import java.time.LocalDateTime;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
