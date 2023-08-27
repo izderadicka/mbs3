@@ -5,6 +5,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.List;
+
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import eu.zderadicka.mbs3.orm.Author;
 import eu.zderadicka.mbs3.rest.AuthorResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.common.mapper.TypeRef;
 
 @QuarkusTest
 @TestHTTPEndpoint(AuthorResource.class)
@@ -21,6 +24,23 @@ import io.quarkus.test.junit.QuarkusTest;
 public class AuthorResourceTest {
 
     private static Long authorId;
+
+    private int countRecords() {
+        List<Author> authors = given()
+                .when()
+                .get()
+                .then()
+                .statusCode(is(200))
+                .extract().body().as(new TypeRef<List<Author>>() {
+                });
+        return authors.size();
+    }
+
+    @Test
+    @Order(1)
+    public void testNoRecorsInitially() {
+        assertEquals(0, countRecords());
+    }
 
     @Test
     @Order(10)
@@ -43,6 +63,12 @@ public class AuthorResourceTest {
 
         authorId = authorCreated.id;
 
+    }
+
+    @Test
+    @Order(15)
+    public void testOneRecordAfterCreate() {
+        assertEquals(1, countRecords());
     }
 
     @Test
@@ -81,5 +107,11 @@ public class AuthorResourceTest {
                 .get("/{id}", authorId)
                 .then()
                 .statusCode(is(404));
+    }
+
+    @Test
+    @Order(45)
+    public void testNoRecorsFinally() {
+        assertEquals(0, countRecords());
     }
 }
