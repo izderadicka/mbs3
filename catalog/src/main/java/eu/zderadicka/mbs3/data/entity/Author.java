@@ -1,4 +1,4 @@
-package eu.zderadicka.mbs3.orm;
+package eu.zderadicka.mbs3.data.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

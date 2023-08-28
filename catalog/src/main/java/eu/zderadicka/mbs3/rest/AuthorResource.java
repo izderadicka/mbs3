@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jboss.resteasy.reactive.RestResponse;
 
-import eu.zderadicka.mbs3.orm.Author;
+import eu.zderadicka.mbs3.data.entity.Author;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;

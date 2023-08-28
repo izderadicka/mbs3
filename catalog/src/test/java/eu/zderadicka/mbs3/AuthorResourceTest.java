@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import eu.zderadicka.mbs3.orm.Author;
+import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.rest.AuthorResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
