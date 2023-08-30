@@ -49,6 +49,8 @@ public class AuthorResourceTest {
         author.firstName = "Usak";
         author.lastName = "Kulisak";
 
+        assertNotNull(author.version);
+
         Author authorCreated = given()
                 .header("Content-Type", "application/json")
                 .and()
