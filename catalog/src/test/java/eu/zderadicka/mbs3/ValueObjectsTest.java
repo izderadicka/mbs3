@@ -57,13 +57,13 @@ public class ValueObjectsTest {
     public void testPersitGenre(UniAsserter asserterIn) {
         var asserter = new UniAsserterWithTransactions(asserterIn);
 
-        asserter.assertEquals(() -> Genre.count(), 57L)
+        asserter.execute(() -> Genre.count().invoke((count) -> asserter.putData("count", count)))
         .execute(() -> {
             var genre = new Genre();
             genre.name = "Test";
             return genre.persist();
         })
-        .assertEquals(() -> Genre.count(), 58L);
+        .assertTrue(() -> Genre.count().map((updatedCount) -> updatedCount == (long) asserter.getData("count") +1));
     }
 
     @Test
