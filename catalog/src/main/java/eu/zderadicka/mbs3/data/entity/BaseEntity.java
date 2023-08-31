@@ -3,16 +3,11 @@ package eu.zderadicka.mbs3.data.entity;
 import java.time.LocalDateTime;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Version;
-import jakarta.ws.rs.NotFoundException;
 
-@Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@MappedSuperclass
 public abstract class BaseEntity extends PanacheEntity {
 
     @Column(name = "created", nullable = false)
@@ -30,12 +25,5 @@ public abstract class BaseEntity extends PanacheEntity {
 
     @Column(name = "modified_by_id")
     public Long modifiedById;
-
-    @SuppressWarnings("unchecked")
-    public static <T extends BaseEntity> Uni<T> findByIdOrThrow(Object id) {
-        return T.findById(id).onItem().ifNull().failWith(() -> new NotFoundException("Not Found"))
-                .map(entity -> (T) entity);
-
-    }
 
 }

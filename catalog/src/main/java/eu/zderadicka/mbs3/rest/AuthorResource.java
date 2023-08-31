@@ -1,5 +1,7 @@
 package eu.zderadicka.mbs3.rest;
 
+import static eu.zderadicka.mbs3.rest.Util.throwNoTFoundOnNull;
+
 import java.util.List;
 
 import org.jboss.resteasy.reactive.RestResponse;
@@ -12,7 +14,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
+import jakarta.ws.rs.POST;  
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
@@ -35,7 +37,7 @@ public class AuthorResource extends BaseResource {
     public Uni<Author> getById(@PathParam("id") Long id) {
         Log.info("GET Author id " + id);
 
-        return Author.findByIdOrThrow(id);
+        return throwNoTFoundOnNull(Author.findById(id));
     }
 
     @POST

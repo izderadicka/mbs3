@@ -38,6 +38,7 @@ public class ValueObjectsTest {
 
         var asserter = new UniAsserterWithTransactions(asserterIn);
         asserter.assertTrue(() -> Genre.count().map(n -> n > 50));
+        asserter.assertFalse(() -> Genre.count().map(n -> n <= 50));
 
     }
 
@@ -45,9 +46,24 @@ public class ValueObjectsTest {
     @RunOnVertxContext
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     public void testGenreProblematic(TransactionalUniAsserter asserter) {
-
         asserter.assertTrue(() -> Genre.count().map(n -> n < 50));
+        asserter.assertTrue(() -> Uni.createFrom().item(false));
 
+    }
+
+    @Test
+    @RunOnVertxContext
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    public void testPersitGenre(UniAsserter asserterIn) {
+        var asserter = new UniAsserterWithTransactions(asserterIn);
+
+        asserter.assertEquals(() -> Genre.count(), 57L)
+        .execute(() -> {
+            var genre = new Genre();
+            genre.name = "Test";
+            return genre.persist();
+        })
+        .assertEquals(() -> Genre.count(), 58L);
     }
 
     @Test

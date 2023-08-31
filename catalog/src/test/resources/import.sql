@@ -56,3 +56,5 @@ VALUES (1, 1, 'Adventure'),
     (56, 1, 'Mystic'),
     (57, 1, 'Alternative'),
     (58, 1, 'Technology');
+
+ALTER SEQUENCE genre_seq RESTART WITH 59;
