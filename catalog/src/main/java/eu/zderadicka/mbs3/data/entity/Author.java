@@ -8,9 +8,25 @@ import jakarta.persistence.Table;
 @Table(name = "author")
 public class Author extends BaseEntity {
     @Column(name = "first_name", length = 128)
-    public String firstName;
+    private String firstName;
 
     @Column(name = "last_name", length = 128, nullable = false)
-    public String lastName;
+    private String lastName;
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
 
 }

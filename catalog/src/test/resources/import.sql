@@ -56,5 +56,10 @@ VALUES (1, 1, 'Adventure'),
     (56, 1, 'Mystic'),
     (57, 1, 'Alternative'),
     (58, 1, 'Technology');
-
 ALTER SEQUENCE genre_seq RESTART WITH 59;
+INSERT INTO "language" ("id", "version_id", "code", "name")
+VALUES (1, 1, 'cs', 'Czech'),
+    (2, 1, 'en', 'English'),
+    (3, 1, 'sk', 'Slovak'),
+    (4, 1, 'ru', 'Russian');
+ALTER SEQUENCE language_seq RESTART WITH 5;

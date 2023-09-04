@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import eu.zderadicka.mbs3.data.value.Genre;
+import eu.zderadicka.mbs3.data.value.Language;
 import io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations;
 import io.quarkus.test.hibernate.reactive.panache.TransactionalUniAsserter;
 import io.quarkus.test.junit.QuarkusTest;
@@ -34,11 +35,13 @@ public class ValueObjectsTest {
     @Test
     @RunOnVertxContext
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    public void testGenre(UniAsserter asserterIn) {
+    public void testValues(UniAsserter asserterIn) {
 
         var asserter = new UniAsserterWithTransactions(asserterIn);
         asserter.assertTrue(() -> Genre.count().map(n -> n > 50));
         asserter.assertFalse(() -> Genre.count().map(n -> n <= 50));
+
+        asserter.assertTrue(() -> Language.count().map(n -> n >= 4));
 
     }
 
@@ -58,12 +61,13 @@ public class ValueObjectsTest {
         var asserter = new UniAsserterWithTransactions(asserterIn);
 
         asserter.execute(() -> Genre.count().invoke((count) -> asserter.putData("count", count)))
-        .execute(() -> {
-            var genre = new Genre();
-            genre.name = "Test";
-            return genre.persist();
-        })
-        .assertTrue(() -> Genre.count().map((updatedCount) -> updatedCount == (long) asserter.getData("count") +1));
+                .execute(() -> {
+                    var genre = new Genre();
+                    genre.name = "Test";
+                    return genre.persist();
+                })
+                .assertTrue(() -> Genre.count()
+                        .map((updatedCount) -> updatedCount == (long) asserter.getData("count") + 1));
     }
 
     @Test

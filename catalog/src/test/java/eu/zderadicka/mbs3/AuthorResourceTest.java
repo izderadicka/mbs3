@@ -46,10 +46,10 @@ public class AuthorResourceTest {
     @Order(10)
     public void testCreate() {
         Author author = new Author();
-        author.firstName = "Usak";
-        author.lastName = "Kulisak";
+        author.setFirstName("Usak");
+        author.setLastName("Kulisak");
 
-        assertNotNull(author.version);
+        assertNotNull(author.getVersion());
 
         Author authorCreated = given()
                 .header("Content-Type", "application/json")
@@ -61,9 +61,9 @@ public class AuthorResourceTest {
                 .statusCode(is(201))
                 .extract().body().as(Author.class);
 
-        assertNotNull(authorCreated.id);
+        assertNotNull(authorCreated.getId());
 
-        authorId = authorCreated.id;
+        authorId = authorCreated.getId();
 
     }
 
@@ -84,8 +84,8 @@ public class AuthorResourceTest {
                 .statusCode(is(200))
                 .extract().body().as(Author.class);
 
-        assertEquals(author.firstName, "Usak");
-        assertEquals(author.lastName, "Kulisak");
+        assertEquals(author.getFirstName(), "Usak");
+        assertEquals(author.getLastName(), "Kulisak");
 
     }
 
