@@ -3,8 +3,6 @@ package eu.zderadicka.mbs3.data.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import eu.zderadicka.mbs3.data.value.Genre;
 import eu.zderadicka.mbs3.data.value.Language;
 import jakarta.persistence.Column;
@@ -15,6 +13,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "ebook")
@@ -22,6 +22,7 @@ public class Ebook extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language_id", nullable = false)
+    @NotNull(message = "language is mandatory")
     private Language language;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +30,7 @@ public class Ebook extends BaseEntity {
     private Series series;
 
     @Column(name = "title", nullable = false, length = 256)
+    @NotBlank(message = "Title is mandatory")
     private String title;
 
     @Column(name = "description")
