@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.jboss.resteasy.reactive.RestResponse;
 
+import eu.zderadicka.mbs3.data.dto.AuthorShort;
 import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.data.repository.AuthorRepository;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -30,8 +31,9 @@ public class AuthorResource extends BaseResource {
     private AuthorRepository repository;
 
     @GET
-    public Uni<List<Author>> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
+    public Uni<List<AuthorShort>> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
         var query = repository.findAll(Sort.by("lastName").and("firstName").ascending())
+                .project(AuthorShort.class)
                 .page(pageNumber, pageSize);
 
         return query.list();
