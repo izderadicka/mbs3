@@ -4,16 +4,13 @@ import static eu.zderadicka.mbs3.rest.Util.throwNoTFoundOnNull;
 
 import java.util.List;
 
-import org.jboss.resteasy.reactive.RestResponse;
-
 import eu.zderadicka.mbs3.data.dto.AuthorShort;
 import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.data.repository.AuthorRepository;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -31,7 +28,7 @@ public class AuthorResource extends BaseResource {
     private AuthorRepository repository;
 
     @GET
-    public Uni<List<AuthorShort>> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
+    public List<AuthorShort> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
         var query = repository.findAll(Sort.by("lastName").and("firstName").ascending())
                 .project(AuthorShort.class)
                 .page(pageNumber, pageSize);
@@ -41,28 +38,29 @@ public class AuthorResource extends BaseResource {
 
     @GET
     @Path("/{id}")
-    public Uni<Author> getById(@PathParam("id") Long id) {
+    public Author getById(@PathParam("id") Long id) {
         Log.info("GET Author id " + id);
 
         return throwNoTFoundOnNull(repository.findById(id));
     }
 
     @POST
-    public Uni<RestResponse<Author>> create(Author author) {
-        return Panache.withTransaction(() -> repository.persist(author))
-                .replaceWith(RestResponse.status(Status.CREATED, author));
+    @Transactional
+    public Response create(Author author) {
+        repository.persist(author);
+        return Response.status(Status.CREATED).entity(author).build();
 
     }
 
     @DELETE
+    @Transactional
     @Path("/{id}")
-    public Uni<Response> delete(@PathParam("id") Long id) {
-        return Panache.withTransaction(() -> repository.deleteById(id)).map((wasDeleted) -> {
-            if (wasDeleted) {
-                return Response.status(204).build();
-            } else {
-                return Response.status(404).build();
-            }
-        });
+    public Response delete(@PathParam("id") Long id) {
+        if (repository.deleteById(id)) {
+            return Response.status(204).build();
+        } else {
+            return Response.status(404).build();
+        }
+
     }
 }

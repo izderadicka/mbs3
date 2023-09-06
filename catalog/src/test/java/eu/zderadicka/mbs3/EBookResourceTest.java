@@ -19,7 +19,6 @@ import io.quarkus.logging.Log;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.common.mapper.TypeRef;
-import io.restassured.internal.http.Status;
 
 @QuarkusTest
 @TestHTTPEndpoint(EbookResource.class)

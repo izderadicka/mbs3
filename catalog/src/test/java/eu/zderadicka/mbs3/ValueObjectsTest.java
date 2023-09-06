@@ -1,73 +1,40 @@
 package eu.zderadicka.mbs3;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import eu.zderadicka.mbs3.data.value.Genre;
 import eu.zderadicka.mbs3.data.value.Language;
-import io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations;
-import io.quarkus.test.hibernate.reactive.panache.TransactionalUniAsserter;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
-import io.quarkus.test.vertx.UniAsserterInterceptor;
-import io.smallrye.mutiny.Uni;
+import jakarta.transaction.Transactional;
 
 @QuarkusTest
 public class ValueObjectsTest {
 
-    private final class UniAsserterWithTransactions extends UniAsserterInterceptor {
-        private UniAsserterWithTransactions(UniAsserter asserter) {
-            super(asserter);
-        }
-
-        @Override
-        protected <T> Supplier<Uni<T>> transformUni(Supplier<Uni<T>> uniSupplier) {
-            return () -> SessionOperations.withTransaction(() -> uniSupplier.get());
-        }
-    }
-
     @Test
-    @RunOnVertxContext
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    public void testValues(UniAsserter asserterIn) {
+    public void testValues() {
 
-        var asserter = new UniAsserterWithTransactions(asserterIn);
-        asserter.assertTrue(() -> Genre.count().map(n -> n > 50));
-        asserter.assertFalse(() -> Genre.count().map(n -> n <= 50));
-
-        asserter.assertTrue(() -> Language.count().map(n -> n >= 4));
+        assertTrue(Genre.count() > 50);
+        assertTrue(Language.count() >= 4);
 
     }
 
     @Test
-    @RunOnVertxContext
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    public void testGenreProblematic(TransactionalUniAsserter asserter) {
-        asserter.assertTrue(() -> Genre.count().map(n -> n < 50));
-        asserter.assertTrue(() -> Uni.createFrom().item(false));
-
-    }
-
-    @Test
-    @RunOnVertxContext
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    public void testPersitGenre(UniAsserter asserterIn) {
-        var asserter = new UniAsserterWithTransactions(asserterIn);
-
-        asserter.execute(() -> Genre.count().invoke((count) -> asserter.putData("count", count)))
-                .execute(() -> {
-                    var genre = new Genre();
-                    genre.name = "Test";
-                    return genre.persist();
-                })
-                .assertTrue(() -> Genre.count()
-                        .map((updatedCount) -> updatedCount == (long) asserter.getData("count") + 1));
+    @Transactional
+    public void testPersitGenre() {
+        var count = Genre.count();
+        var genre = new Genre();
+        genre.name = "Test";
+        genre.persist();
+        assertEquals(count + 1, Genre.count());
     }
 
     @Test
