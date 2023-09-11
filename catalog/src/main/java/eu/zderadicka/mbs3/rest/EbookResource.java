@@ -2,6 +2,8 @@ package eu.zderadicka.mbs3.rest;
 
 import java.util.List;
 
+import eu.zderadicka.mbs3.common.Page;
+import eu.zderadicka.mbs3.data.dto.EbookView;
 import eu.zderadicka.mbs3.data.entity.Ebook;
 import eu.zderadicka.mbs3.data.repository.EbookRepository;
 import io.quarkus.panache.common.Sort;
@@ -23,11 +25,8 @@ public class EbookResource extends BaseResource {
     private EbookRepository repository;
 
     @GET
-    public List<Ebook> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
-        var query = repository.findAllPrefetched(Sort.by("title"))
-                .page(pageNumber, pageSize);
-
-        return query.list();
+    public List<EbookView> listPaged(@QueryParam("page") Integer pageNumber) {
+        return repository.listAllProjected(new Page(pageNumber));
     }
 
     @POST

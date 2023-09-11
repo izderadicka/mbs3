@@ -4,7 +4,8 @@ import static eu.zderadicka.mbs3.rest.Util.throwNoTFoundOnNull;
 
 import java.util.List;
 
-import eu.zderadicka.mbs3.data.dto.AuthorShort;
+import eu.zderadicka.mbs3.common.Page;
+import eu.zderadicka.mbs3.data.dto.AuthorView;
 import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.data.repository.AuthorRepository;
 import io.quarkus.logging.Log;
@@ -17,6 +18,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -28,16 +30,13 @@ public class AuthorResource extends BaseResource {
     private AuthorRepository repository;
 
     @GET
-    public List<AuthorShort> listPaged(@QueryParam("page") @DefaultValue("0") int pageNumber) {
-        var query = repository.findAll(Sort.by("lastName").and("firstName").ascending())
-                .project(AuthorShort.class)
-                .page(pageNumber, pageSize);
-
-        return query.list();
+    public List<AuthorView> listPaged(@QueryParam("page") Integer pageNumber) {
+        return repository.listProjected(new Page(pageNumber));
     }
 
     @GET
     @Path("/{id}")
+    @Produces("application/json")
     public Author getById(@PathParam("id") Long id) {
         Log.info("GET Author id " + id);
 

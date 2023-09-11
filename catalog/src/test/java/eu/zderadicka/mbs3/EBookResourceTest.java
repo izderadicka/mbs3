@@ -83,8 +83,8 @@ public class EBookResourceTest {
                 });
 
         assertEquals(1, result.size());
-        assertEquals(result.get(0).getTitle(), "Testovaci kniha");
-        assertEquals(result.get(0).getLanguage().code, "cs");
+        assertEquals("Testovaci kniha", result.get(0).getTitle());
+        assertEquals("Czech", result.get(0).getLanguage().name);
     }
 
 }

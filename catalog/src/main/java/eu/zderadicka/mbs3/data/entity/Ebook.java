@@ -54,13 +54,13 @@ public class Ebook extends BaseEntity {
     @Column(name = "base_dir", nullable = false, length = 512)
     private String baseDir;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "ebook_authors", schema = "public", joinColumns = {
             @JoinColumn(name = "ebook_id", nullable = false, updatable = false) }, inverseJoinColumns = {
                     @JoinColumn(name = "author_id", nullable = false, updatable = false) })
     private Set<Author> authors = new HashSet<Author>(0);
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "ebook_genres", schema = "public", joinColumns = {
             @JoinColumn(name = "ebook_id", nullable = false, updatable = false) }, inverseJoinColumns = {
                     @JoinColumn(name = "genre_id", nullable = false, updatable = false) })
