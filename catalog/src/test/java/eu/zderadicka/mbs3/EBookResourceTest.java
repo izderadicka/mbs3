@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import eu.zderadicka.mbs3.data.entity.Ebook;
+import eu.zderadicka.mbs3.data.value.Genre;
 import eu.zderadicka.mbs3.data.value.Language;
 import eu.zderadicka.mbs3.rest.EbookResource;
 import io.quarkus.logging.Log;
@@ -53,6 +54,14 @@ public class EBookResourceTest {
         ebook.setBaseDir("Testovaci kniha");
         ebook.setLanguage(language);
 
+        var genre1 = new Genre();
+        genre1.id = 9L;
+
+        var genre2 = new Genre();
+        genre2.id = 25L;
+
+        ebook.addGenre(genre1, genre2);
+
         var response = given()
                 .body(ebook)
                 .and()
@@ -81,10 +90,18 @@ public class EBookResourceTest {
                 .then()
                 .extract().body().as(new TypeRef<List<Ebook>>() {
                 });
-
+        var first = result.get(0);
         assertEquals(1, result.size());
-        assertEquals("Testovaci kniha", result.get(0).getTitle());
-        assertEquals("Czech", result.get(0).getLanguage().name);
+        assertEquals("Testovaci kniha", first.getTitle());
+        assertEquals("Czech", first.getLanguage().name);
+        assertEquals(2, first.getGenres().size());
+        for (var genre : first.getGenres()) {
+            if (genre.id == 9L) {
+                assertEquals("Fantasy", genre.name);
+            } else if (genre.id == 25L) {
+                assertEquals("Science Fiction", genre.name);
+            }
+        }
     }
 
 }

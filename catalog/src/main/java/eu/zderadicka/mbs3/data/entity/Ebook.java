@@ -1,5 +1,6 @@
 package eu.zderadicka.mbs3.data.entity;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -160,6 +161,10 @@ public class Ebook extends BaseEntity {
 
     public void setGenres(Set<Genre> genres) {
         this.genres = genres;
+    }
+
+    public void addGenre(Genre... genres) {
+        this.genres.addAll(Arrays.asList(genres));
     }
 
 }
