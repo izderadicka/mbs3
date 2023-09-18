@@ -2,20 +2,22 @@ package eu.zderadicka.mbs3.rest;
 
 import static eu.zderadicka.mbs3.rest.Util.throwNoTFoundOnNull;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import eu.zderadicka.mbs3.common.Page;
 import eu.zderadicka.mbs3.data.dto.AuthorView;
 import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.data.repository.AuthorRepository;
+import eu.zderadicka.mbs3.rest.error.Exceptions.InvalidEntityId;
 import io.quarkus.logging.Log;
-import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -24,7 +26,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 @Path("api/v1/authors")
-public class AuthorResource extends BaseResource {
+public class AuthorResource {
 
     @Inject
     private AuthorRepository repository;
@@ -45,10 +47,24 @@ public class AuthorResource extends BaseResource {
 
     @POST
     @Transactional
-    public Response create(Author author) {
+    public Response create(@Valid Author author) {
         repository.persist(author);
         return Response.status(Status.CREATED).entity(author).build();
 
+    }
+
+    @PUT
+    @Transactional
+    @Path("/{id}")
+    public Response update(@PathParam("id") Long id, Author author) {
+        if (id == null || !id.equals(author.getId())) {
+            throw new InvalidEntityId();
+        }
+
+        throwNoTFoundOnNull(repository.findById(id));
+        var existingAuthor = repository.getEntityManager().merge(author);
+        existingAuthor.setModified(LocalDateTime.now());
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE

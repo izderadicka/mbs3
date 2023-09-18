@@ -13,6 +13,17 @@ public class Author extends BaseEntity {
     @Column(name = "last_name", length = 128, nullable = false)
     private String lastName;
 
+    @Column(name = "description")
+    private String description;
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getFirstName() {
         return firstName;
     }

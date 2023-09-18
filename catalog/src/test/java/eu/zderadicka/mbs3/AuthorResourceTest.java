@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ import io.restassured.common.mapper.TypeRef;
 public class AuthorResourceTest {
 
     private static Long authorId;
+    private static int numberOfAuthors;
 
     private int countRecords() {
         List<Author> authors = given()
@@ -40,7 +42,8 @@ public class AuthorResourceTest {
     @Test
     @Order(1)
     public void testNoRecorsInitially() {
-        assertEquals(0, countRecords());
+        numberOfAuthors = countRecords();
+        assertTrue(numberOfAuthors > 0 );
     }
 
     @Test
@@ -71,7 +74,7 @@ public class AuthorResourceTest {
     @Test
     @Order(15)
     public void testOneRecordAfterCreate() {
-        assertEquals(1, countRecords());
+        assertEquals(numberOfAuthors + 1, countRecords());
     }
 
     @Test
@@ -115,6 +118,6 @@ public class AuthorResourceTest {
     @Test
     @Order(45)
     public void testNoRecorsFinally() {
-        assertEquals(0, countRecords());
+        assertEquals(numberOfAuthors, countRecords());
     }
 }

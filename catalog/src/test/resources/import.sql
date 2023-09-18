@@ -63,3 +63,69 @@ VALUES (1, 1, 'cs', 'Czech'),
     (3, 1, 'sk', 'Slovak'),
     (4, 1, 'ru', 'Russian');
 ALTER SEQUENCE language_seq RESTART WITH 5;
+INSERT INTO "author" (
+        "id",
+        "version_id",
+        "created",
+        "modified",
+        "last_name",
+        "first_name",
+        "description",
+        "created_by_id",
+        "modified_by_id"
+    )
+VALUES (
+        1,
+        1,
+        '2014-06-08 12:19:19',
+        '2014-06-08 12:19:19',
+        'Iggulden',
+        'Conn',
+        NULL,
+        1,
+        1
+    ),
+    (
+        2,
+        1,
+        '2010-07-25 11:33:53',
+        '2010-08-11 11:56:08',
+        'Adams',
+        'Douglas',
+        NULL,
+        1,
+        1
+    ),
+    (
+        3,
+        1,
+        '2010-07-25 11:34:05',
+        '2010-07-25 11:34:05',
+        'Adamski',
+        'George',
+        NULL,
+        1,
+        1
+    ),
+    (
+        4,
+        1,
+        '2010-07-25 11:34:05',
+        '2010-07-25 11:34:05',
+        'Adrejev',
+        'Leonid',
+        NULL,
+        1,
+        1
+    );
+SELECT setval(
+        'author_seq',
+        COALESCE(
+            (
+                SELECT MAX(id) + 1
+                FROM author
+            ),
+            1
+        ),
+        false
+    );

@@ -155,6 +155,10 @@ public class Ebook extends BaseEntity {
         this.authors = authors;
     }
 
+    public void addAuthor(Author... authors) {
+        this.authors.addAll(Arrays.asList(authors));
+    }
+
     public Set<Genre> getGenres() {
         return this.genres;
     }
