@@ -11,6 +11,7 @@ import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.data.repository.AuthorRepository;
 import eu.zderadicka.mbs3.rest.error.Exceptions.InvalidEntityId;
 import io.quarkus.logging.Log;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 @Path("api/v1/authors")
+@RolesAllowed({ "user", "admin" })
 public class AuthorResource {
 
     @Inject
@@ -69,6 +71,7 @@ public class AuthorResource {
 
     @DELETE
     @Transactional
+    @RolesAllowed("admin")
     @Path("/{id}")
     public Response delete(@PathParam("id") Long id) {
         if (repository.deleteById(id)) {

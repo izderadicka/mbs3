@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -18,11 +17,13 @@ import eu.zderadicka.mbs3.data.entity.Author;
 import eu.zderadicka.mbs3.rest.AuthorResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.common.mapper.TypeRef;
 
 @QuarkusTest
 @TestHTTPEndpoint(AuthorResource.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestSecurity(user = "ivan@zderadicka.eu", roles = "admin")
 public class AuthorResourceTest {
 
     private static Long authorId;
@@ -43,7 +44,7 @@ public class AuthorResourceTest {
     @Order(1)
     public void testNoRecorsInitially() {
         numberOfAuthors = countRecords();
-        assertTrue(numberOfAuthors > 0 );
+        assertTrue(numberOfAuthors > 0);
     }
 
     @Test
@@ -91,6 +92,18 @@ public class AuthorResourceTest {
         assertEquals(author.getFirstName(), "Usak");
         assertEquals(author.getLastName(), "Kulisak");
 
+    }
+
+    @Test
+    @Order(25)
+    @TestSecurity(user = "usak@kulisak.net", roles = "user")
+    public void testDeleteUnauthorized() {
+        assertNotNull(authorId);
+        given()
+                .when()
+                .delete("/{id}", authorId)
+                .then()
+                .statusCode(is(403));
     }
 
     @Test
