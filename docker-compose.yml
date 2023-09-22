@@ -18,5 +18,11 @@ services:
     ports:
       - 8080:8080
 
+  rabbit:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+    restart: always
+
 volumes:
   postgres:

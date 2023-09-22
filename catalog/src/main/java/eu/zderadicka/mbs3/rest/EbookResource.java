@@ -5,9 +5,13 @@ import static eu.zderadicka.mbs3.rest.Util.throwNoTFoundOnNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+
 import eu.zderadicka.mbs3.common.Page;
 import eu.zderadicka.mbs3.data.dto.EbookView;
 import eu.zderadicka.mbs3.data.entity.Ebook;
+import eu.zderadicka.mbs3.data.message.EbookChange;
 import eu.zderadicka.mbs3.data.repository.EbookRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,6 +27,9 @@ import jakarta.ws.rs.core.Response.Status;
 
 @Path("/api/v1/ebooks")
 public class EbookResource {
+
+    @Channel("ebook-updates")
+    Emitter<EbookChange> updateChannel;
 
     @Inject
     private EbookRepository repository;
@@ -43,6 +50,7 @@ public class EbookResource {
     public Response create(@Valid Ebook ebook) {
 
         repository.persist(ebook);
+        updateChannel.send(EbookChange.fromEbook(ebook));
         return Response.status(Status.CREATED).entity(ebook).build();
 
     }
@@ -61,7 +69,7 @@ public class EbookResource {
         var existingEbook = repository.getEntityManager().merge(ebook);
 
         existingEbook.setModified(LocalDateTime.now());
-
+        updateChannel.send(EbookChange.fromEbook(ebook));
         return Response.status(Status.NO_CONTENT).build();
     }
 }
