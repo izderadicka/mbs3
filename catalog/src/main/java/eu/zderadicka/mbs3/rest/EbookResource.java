@@ -16,6 +16,7 @@ import eu.zderadicka.mbs3.data.repository.EbookRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -50,7 +51,7 @@ public class EbookResource {
     public Response create(@Valid Ebook ebook) {
 
         repository.persist(ebook);
-        updateChannel.send(EbookChange.fromEbook(ebook));
+        updateChannel.send(EbookChange.fromEbook(ebook, true));
         return Response.status(Status.CREATED).entity(ebook).build();
 
     }
@@ -69,7 +70,19 @@ public class EbookResource {
         var existingEbook = repository.getEntityManager().merge(ebook);
 
         existingEbook.setModified(LocalDateTime.now());
-        updateChannel.send(EbookChange.fromEbook(ebook));
+        updateChannel.send(EbookChange.fromEbook(ebook, false));
         return Response.status(Status.NO_CONTENT).build();
+    }
+
+    @DELETE
+    @Transactional
+    @Path("/{id}")
+    public Response delete(@PathParam("id") Long id) {
+        if (repository.deleteById(id)) {
+            return Response.status(204).build();
+        } else {
+            return Response.status(404).build();
+        }
+
     }
 }

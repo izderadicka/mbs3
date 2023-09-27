@@ -40,4 +40,14 @@ public class Author extends BaseEntity {
         this.lastName = lastName;
     }
 
+    @Override
+    public String toString() {
+
+        if (firstName != null) {
+            return String.format("%s %s", firstName, lastName);
+        } else {
+            return lastName;
+        }
+    }
+
 }

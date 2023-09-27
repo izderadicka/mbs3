@@ -26,11 +26,11 @@ public abstract class BaseEntity implements Serializable {
     @Version
     private int version = 1;
 
-    @Column(name = "created_by_id")
-    private Long createdById;
+    @Column(name = "created_by")
+    private String createdBy;
 
-    @Column(name = "modified_by_id")
-    private Long modifiedById;
+    @Column(name = "modified_by")
+    private String modifiedBy;
 
     public LocalDateTime getCreated() {
         return created;
@@ -56,20 +56,20 @@ public abstract class BaseEntity implements Serializable {
         this.version = version;
     }
 
-    public Long getCreatedById() {
-        return createdById;
+    public String getCreatedBy() {
+        return createdBy;
     }
 
-    public void setCreatedById(Long createdById) {
-        this.createdById = createdById;
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
-    public Long getModifiedById() {
-        return modifiedById;
+    public String getModifiedBy() {
+        return modifiedBy;
     }
 
-    public void setModifiedById(Long modifiedById) {
-        this.modifiedById = modifiedById;
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 
     public Long getId() {
