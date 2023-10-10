@@ -18,6 +18,7 @@ public class EbookChange {
         public Set<String> authors;
         public Set<String> genres;
         public String language;
+        public String description;
 
     }
 
