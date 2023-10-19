@@ -5,14 +5,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -34,13 +37,10 @@ public class SearchService {
     private IndexWriterConfig cfg = new IndexWriterConfig(analyzer);
     private IndexWriter indexWriter;
 
-    private static String indexPath;
-
     @Inject
     public SearchService(@ConfigProperty(name = "index.directory") String indexPath) {
         try {
             Log.info(String.format("Index path is %s", indexPath));
-            this.indexPath = indexPath;
             var path = Path.of(indexPath);
             var indexLocation = FSDirectory.open(path);
             init(indexLocation);
@@ -80,10 +80,10 @@ public class SearchService {
         }
     }
 
-    public void addDocument(Ebook ebook) {
+    public void addOrUpdateDocument(Ebook ebook) {
         try {
             var document = DocumentAdapter.fromEbook(ebook);
-            indexWriter.addDocument(document);
+            indexWriter.updateDocuments(LongPoint.newExactQuery("id", ebook.id), Collections.singleton(document));
             indexWriter.commit();
 
         } catch (IOException e) {
@@ -97,7 +97,7 @@ public class SearchService {
         try (var indexReader = DirectoryReader.open(indexWriter)) {
 
             var searcher = new IndexSearcher(indexReader);
-            var query = new QueryParser("title", analyzer).parse(phrase);
+            var query = new QueryParser("text", analyzer).parse(phrase);
             var result = searcher.search(query, 10);
 
             return Arrays.stream(result.scoreDocs).map(item -> {

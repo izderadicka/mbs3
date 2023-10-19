@@ -37,6 +37,7 @@ public class EbookChange {
         e.seriesIndex = ebook.getSeriesIndex();
         e.authors = ebook.getAuthors().stream().map(author -> author.toString()).collect(Collectors.toSet());
         e.genres = ebook.getGenres().stream().map(genre -> genre.name).collect(Collectors.toSet());
+        e.language = ebook.getLanguage().name;
         e.description = ebook.getDescription();
         ebookChange.ebook = e;
         return ebookChange;
