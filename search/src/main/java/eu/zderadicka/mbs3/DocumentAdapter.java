@@ -11,7 +11,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.TextField;
 
-import eu.zderadicka.mbs3.data.message.EbookChange.Ebook;
+import eu.zderadicka.mbs3.data.Ebook;
 
 public class DocumentAdapter {
 

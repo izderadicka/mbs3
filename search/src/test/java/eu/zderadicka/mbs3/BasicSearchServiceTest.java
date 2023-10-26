@@ -3,11 +3,12 @@ package eu.zderadicka.mbs3;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.Test;
 
-import eu.zderadicka.mbs3.data.message.EbookChange.Ebook;
+import eu.zderadicka.mbs3.data.Ebook;
 
 public class BasicSearchServiceTest {
 
@@ -27,19 +28,19 @@ public class BasicSearchServiceTest {
         genres.add("Horror");
         ebook.genres = genres;
         ebook.language = "Czech";
-        service.addOrUpdateDocument(ebook);
+        service.addOrUpdateDocuments(List.of(ebook));
         var res = service.search("vedro");
-        assertEquals(1, res.size());
-        assertEquals("Utery", res.get(0).series);
+        assertEquals(1, res.results.size());
+        assertEquals("Utery", res.results.get(0).ebook.series);
 
         res = service.search("Metelka Dusin");
-        assertEquals(1, res.size());
+        assertEquals(1, res.results.size());
 
         res = service.search("Czech Horror");
-        assertEquals(1, res.size());
+        assertEquals(1, res.results.size());
 
         res = service.search("tlacholap");
-        assertEquals(0, res.size());
+        assertEquals(0, res.results.size());
 
     }
 

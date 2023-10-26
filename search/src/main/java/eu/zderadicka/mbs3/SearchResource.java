@@ -1,10 +1,9 @@
 package eu.zderadicka.mbs3;
 
-import java.util.List;
-
-import eu.zderadicka.mbs3.data.message.EbookChange.Ebook;
+import eu.zderadicka.mbs3.data.SearchResults;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -19,7 +18,8 @@ public class SearchResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Ebook> search(@QueryParam("q") @NotEmpty String query) {
-        return searchService.search(query);
+    public SearchResults search(@QueryParam("q") @NotEmpty String query,
+            @QueryParam("size") @DefaultValue("10") Integer resultsSize) {
+        return searchService.search(query, resultsSize);
     }
 }

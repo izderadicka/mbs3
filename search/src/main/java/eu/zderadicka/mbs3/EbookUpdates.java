@@ -19,7 +19,7 @@ public class EbookUpdates {
 
         Log.info(String.format("Got message payload type %s content %s", msg.getClass().getName(), msg));
         EbookChange data = msg.mapTo(EbookChange.class);
-        search.addOrUpdateDocument(data.ebook);
+        search.addOrUpdateDocuments(data.ebooks);
 
     }
 }
