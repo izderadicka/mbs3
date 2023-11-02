@@ -18,11 +18,12 @@ public class BasicSearchServiceTest {
         var service = new SearchService(new ByteBuffersDirectory());
         Ebook ebook = new Ebook();
         ebook.id = 1L;
-        ebook.title = "To zatracene vedro";
-        ebook.series = "Utery";
+        ebook.title = "To zatracené vedro";
+        ebook.series = "Uterý";
         var authors = new HashSet<String>();
         authors.add("Jarka Metelka");
         authors.add("Mirek Dusin");
+        authors.add("Rychlonožka");
         ebook.authors = authors;
         var genres = new HashSet<String>();
         genres.add("Horror");
@@ -31,7 +32,7 @@ public class BasicSearchServiceTest {
         service.addOrUpdateDocuments(List.of(ebook));
         var res = service.search("vedro");
         assertEquals(1, res.results.size());
-        assertEquals("Utery", res.results.get(0).ebook.series);
+        assertEquals("Uterý", res.results.get(0).ebook.series);
 
         res = service.search("Metelka Dusin");
         assertEquals(1, res.results.size());
@@ -39,8 +40,13 @@ public class BasicSearchServiceTest {
         res = service.search("Czech Horror");
         assertEquals(1, res.results.size());
 
+        res = service.search("rychlonozka");
+        assertEquals(1, res.results.size());
+
         res = service.search("tlacholap");
         assertEquals(0, res.results.size());
+
+
 
     }
 

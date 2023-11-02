@@ -20,6 +20,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import eu.zderadicka.mbs3.analysis.AnalyzerFactory;
+import eu.zderadicka.mbs3.analysis.CustomAnalyzerFactory;
 import eu.zderadicka.mbs3.data.Ebook;
 import eu.zderadicka.mbs3.data.SearchResults;
 import io.quarkus.logging.Log;
@@ -31,12 +33,13 @@ import jakarta.inject.Inject;
 public class SearchService {
 
     private Directory index;
-    private Analyzer analyzer = new StandardAnalyzer();
-    private IndexWriterConfig cfg = new IndexWriterConfig(analyzer);
+    private Analyzer analyzer;
+    private AnalyzerFactory analyzerFactory;
     private IndexWriter indexWriter;
 
     @Inject
-    public SearchService(@ConfigProperty(name = "index.directory") String indexPath) {
+    public SearchService(@ConfigProperty(name = "index.directory") String indexPath, AnalyzerFactory analyzerFactory) {
+        this.analyzerFactory = analyzerFactory;
         try {
             Log.info(String.format("Index path is %s", indexPath));
             var path = Path.of(indexPath);
@@ -51,12 +54,14 @@ public class SearchService {
     }
 
     public SearchService(Directory indexLocation) {
+        analyzerFactory = new CustomAnalyzerFactory();
         init(indexLocation);
     }
 
-    private void init(Directory indexLocation) {
+    private void init(Directory index) {
         try {
-            index = indexLocation;
+            analyzer = analyzerFactory.create();
+            IndexWriterConfig cfg = new IndexWriterConfig(analyzer);
             indexWriter = new IndexWriter(index, cfg);
 
         } catch (IOException e) {
