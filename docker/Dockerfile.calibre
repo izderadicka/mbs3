@@ -1,0 +1,11 @@
+FROM ubuntu:22.04
+LABEL description="calibre and libreoffice writer"
+LABEL author="Ivan"
+
+RUN apt-get update &&\
+    apt-get install -y wget python3 libegl1 libopengl0 xz-utils libreoffice-writer &&\
+    wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
+
+WORKDIR /work
+ENV HOME=/work
+

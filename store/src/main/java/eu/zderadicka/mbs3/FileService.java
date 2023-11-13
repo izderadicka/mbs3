@@ -57,7 +57,7 @@ public class FileService {
 
         var fullTarget = getFullFinalPath(toFile);
         var fullTargetDirectory = fullTarget.getParent();
-        var fullSource = tempDirectory.resolve(fromFile);
+        var fullSource = getTemporaryPath(fromFile);
         var idx = 1;
         Optional<String> changedName = Optional.empty();
         synchronized (this) {
@@ -90,6 +90,14 @@ public class FileService {
         checkPath(toPath);
         var fullPath = finalDirectory.resolve(toFile);
         return fullPath;
+    }
+
+    public Path getTemporaryPath(String file) {
+        var path = Path.of(file);
+        if (path.getParent() != null || file.startsWith(".")) {
+            throw new InsecurePathException("Invalid name of temporary file");
+        }
+        return tempDirectory.resolve(path);
     }
 
     private void checkPath(Path p) {

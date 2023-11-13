@@ -2,3 +2,4 @@
 .quarkus
 **/target
 **/.vscode
+/data

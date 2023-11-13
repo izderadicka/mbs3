@@ -94,4 +94,17 @@ public class UploadResource {
 
     }
 
+    @GET
+    @Path("temporary/{file}")
+    public Response getTemporaryFile(String file) {
+
+        var filePath = fileService.getTemporaryPath(file);
+        if (!Files.exists(filePath)) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(filePath).build();
+
+    }
+
 }

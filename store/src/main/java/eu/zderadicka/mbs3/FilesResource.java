@@ -12,6 +12,7 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.file.AsyncFile;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
@@ -31,6 +32,9 @@ public class FilesResource {
     @Path("/{file:.+}")
     public Response getFile(String file) {
         var fullName = fileService.getFullFinalPath(file);
+        if (!Files.exists(fullName)) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
         var downloadName = fullName.getFileName().toString();
         String contentType = null;
         try {
