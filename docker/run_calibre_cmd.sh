@@ -8,12 +8,11 @@ COMMAND=$(basename "$0")
 
 # Check if the script is a symlink
 if [ "$COMMAND" == "$FILE" ]; then
-    echo "This script must be run from a symlink."
+    echo "This script must be run from a symlink." >&2
     exit 1
 fi
 
-
+HOST_DIR=${EBOOKS_DIR:-$HOME}
 IMAGE=${CALIBRE_IMAGE:-izderadicka/calibre}
-
 # Run the command in Docker with all arguments
-docker run --rm --user $(id -u):$(id -g) -v $HOME:/work $IMAGE "$COMMAND" "$@"
+docker run --rm --user $(id -u):$(id -g) -v $HOST_DIR:/work $IMAGE "$COMMAND" "$@"
