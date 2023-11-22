@@ -1,6 +1,8 @@
 package eu.zderadicka.mbs3;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 
@@ -14,6 +16,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
 
 @Path("/api/v1/files")
@@ -30,9 +33,11 @@ public class FilesResource {
 
     @GET
     @Path("/{file:.+}")
-    public Response getFile(String file) {
-        var fullName = fileService.getFullFinalPath(file);
+    public Response getFile(@PathParam("file") String file) {
+        String decodedFile = URLDecoder.decode(file, StandardCharsets.UTF_8);
+        var fullName = fileService.getFullFinalPath(decodedFile);
         if (!Files.exists(fullName)) {
+            Log.error("Requested file is " + fullName + " does not exist");
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         var downloadName = fullName.getFileName().toString();
