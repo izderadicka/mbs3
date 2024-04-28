@@ -71,8 +71,8 @@ INSERT INTO "author" (
         "last_name",
         "first_name",
         "description",
-        "created_by_id",
-        "modified_by_id"
+        "created_by",
+        "modified_by"
     )
 VALUES (
         1,
@@ -82,8 +82,8 @@ VALUES (
         'Iggulden',
         'Conn',
         NULL,
-        1,
-        1
+        '1',
+        '1'
     ),
     (
         2,
@@ -93,8 +93,8 @@ VALUES (
         'Adams',
         'Douglas',
         NULL,
-        1,
-        1
+        '1',
+        '1'
     ),
     (
         3,
@@ -104,8 +104,8 @@ VALUES (
         'Adamski',
         'George',
         NULL,
-        1,
-        1
+        '1',
+        '1'
     ),
     (
         4,
@@ -115,8 +115,8 @@ VALUES (
         'Adrejev',
         'Leonid',
         NULL,
-        1,
-        1
+        '1',
+        '1'
     );
 SELECT setval(
         'author_seq',

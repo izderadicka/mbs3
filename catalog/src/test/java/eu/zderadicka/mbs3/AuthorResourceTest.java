@@ -42,7 +42,7 @@ public class AuthorResourceTest {
 
     @Test
     @Order(1)
-    public void testNoRecorsInitially() {
+    public void testSomeRecorsInitially() {
         numberOfAuthors = countRecords();
         assertTrue(numberOfAuthors > 0);
     }
