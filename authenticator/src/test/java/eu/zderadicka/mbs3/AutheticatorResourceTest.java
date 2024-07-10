@@ -16,7 +16,7 @@ import java.util.Set;
 public class AutheticatorResourceTest {
 
     @Test
-    public void testHelloEndpoint() {
+    public void testJwtAuthentication() {
         var token = new TokenInfo();
         token.upn = "usak@kulisak.net";
         token.validSeconds = 60L;
