@@ -1,5 +1,14 @@
 # convert
 
+# Calibre
+
+This service requires Calibre ebook-meta and ebook-convert
+For development you can use provided docker file in ./calibre and scripts there (link to to directory on your PATH)
+
+
+----
+
+
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
