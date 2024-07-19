@@ -35,7 +35,7 @@ public class ConversionService {
 
     public CompletableFuture<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
         var name = UUID.randomUUID().toString();
-        Optional<String> ext = maybeExt.or(() ->guessExtension(mimeType));
+        Optional<String> ext = maybeExt.or(() -> guessExtension(mimeType));
         final String fileName;
         if (ext.isPresent()) {
             fileName = name + "." + ext.get();
@@ -52,30 +52,31 @@ public class ConversionService {
             } catch (Exception e) {
                 Log.error("Error", e);
                 future.completeExceptionally(e);
-        }
-    });
+            }
+        });
 
-    return future;
+        return future;
 
     }
 
-    public CompletableFuture<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt, String mimeType) {
+    public CompletableFuture<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,
+            String mimeType) {
 
         return createTmpFile(dataStream, maybeExt, mimeType)
-        .thenCompose(file -> {
-            var future = extractMetadata(file);
-            future.thenRun(() -> {
-                try {
-                    Files.delete(workDir.resolve(file));
-                } catch (IOException e) {
-                    Log.error("Cannot delete file ", e);
-                }
-            });
-            return future;})
-        
+                .thenCompose(file -> {
+                    var future = extractMetadata(file);
+                    future.thenRun(() -> {
+                        try {
+                            Files.delete(workDir.resolve(file));
+                        } catch (IOException e) {
+                            Log.error("Cannot delete file ", e);
+                        }
+                    });
+                    return future;
+                })
+
         ;
-       
-        
+
     }
 
     public CompletableFuture<String> extractMetadata(String file) {
