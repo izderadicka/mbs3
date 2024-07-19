@@ -57,14 +57,14 @@ public class Ebook extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "ebook_authors", schema = "public", joinColumns = {
-            @JoinColumn(name = "ebook_id", nullable = false, updatable = false) }, inverseJoinColumns = {
-                    @JoinColumn(name = "author_id", nullable = false, updatable = false) })
+            @JoinColumn(name = "ebook_id", nullable = false ) }, inverseJoinColumns = {
+                    @JoinColumn(name = "author_id", nullable = false) })
     private Set<Author> authors = new HashSet<Author>(0);
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "ebook_genres", schema = "public", joinColumns = {
-            @JoinColumn(name = "ebook_id", nullable = false, updatable = false) }, inverseJoinColumns = {
-                    @JoinColumn(name = "genre_id", nullable = false, updatable = false) })
+            @JoinColumn(name = "ebook_id", nullable = false) }, inverseJoinColumns = {
+                    @JoinColumn(name = "genre_id", nullable = false) })
     private Set<Genre> genres = new HashSet<Genre>(0);
 
     public String getTitle() {
