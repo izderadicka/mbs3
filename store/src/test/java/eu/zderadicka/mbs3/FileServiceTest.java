@@ -2,6 +2,7 @@ package eu.zderadicka.mbs3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -12,6 +13,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 import eu.zderadicka.mbs3.data.ConfirmUpload;
+import eu.zderadicka.mbs3.service.FileService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
@@ -35,6 +37,13 @@ public class FileServiceTest extends BaseTest {
         var commonPart = finalName.substring(0, idx);
         var shouldBePath = commonPart + "(1).txt";
         assertEquals(shouldBePath, modifiedPath);
+    }
+
+    @Test
+    public void testDeleteTemporaryFile() throws IOException {
+        var tmpFile = uploadFile("test_file.txt", 1024);
+        assertTrue(fileService.deleteTemporaryFile(tmpFile));
+        
     }
 
     private String uploadFile(String name, int length) throws IOException {

@@ -30,7 +30,9 @@ services:
       - 8843:4043
     user: "1000:1000"
     volumes:
-      - /home/ivan/workspace/mbs3/data:/data
+      - /home/ivan/workspace/mbs3/store/data:/data
+    environment:
+      - QUARKUS_LOG_CATEGORY__EU_ZDERADICKA__LEVEL=DEBUG
     
 
 volumes:

@@ -1,22 +1,25 @@
 package eu.zderadicka.mbs3;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.tika.mime.MimeType;
-import org.apache.tika.mime.MimeTypeException;
-import org.apache.tika.mime.MimeTypes;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 import io.quarkus.logging.Log;
+import io.vertx.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import static eu.zderadicka.mbs3.Utils.guessExtension;
 
 @ApplicationScoped
 public class ConversionService {
@@ -27,32 +30,52 @@ public class ConversionService {
     @Inject
     private ManagedExecutor executor;
 
-    public CompletableFuture<Path> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
+    @Inject
+    private Vertx vertx;
+
+    public CompletableFuture<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
         var name = UUID.randomUUID().toString();
         Optional<String> ext = maybeExt.or(() ->guessExtension(mimeType));
+        final String fileName;
         if (ext.isPresent()) {
-            name = name + "." + ext.get();
+            fileName = name + "." + ext.get();
+        } else {
+            fileName = name;
         }
-        throw new UnsupportedOperationException("Not Implemeted");
+
+        CompletableFuture<String> future = executor.newIncompleteFuture();
+        executor.execute(() -> {
+            try {
+                Path tmpFile = workDir.resolve(fileName);
+                Files.copy(data, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+                future.complete(fileName);
+            } catch (Exception e) {
+                Log.error("Error", e);
+                future.completeExceptionally(e);
+        }
+    });
+
+    return future;
 
     }
 
-    private Optional<String> guessExtension(String mimeTypeName) {
+    public CompletableFuture<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt, String mimeType) {
 
-        MimeType mimeType = null;
-        try {
-            mimeType = new MimeTypes().forName(mimeTypeName);
-        } catch (MimeTypeException e) {
-            Log.warn("Couldn't Detect Mime Type for type: " + mimeTypeName, e);
-        }
-
-        if (mimeType != null) {
-            String extension = mimeType.getExtension();
-            return Optional.of(extension);
-        } else {
-            return Optional.empty();
-        }
-
+        return createTmpFile(dataStream, maybeExt, mimeType)
+        .thenCompose(file -> {
+            var future = extractMetadata(file);
+            future.thenRun(() -> {
+                try {
+                    Files.delete(workDir.resolve(file));
+                } catch (IOException e) {
+                    Log.error("Cannot delete file ", e);
+                }
+            });
+            return future;})
+        
+        ;
+       
+        
     }
 
     public CompletableFuture<String> extractMetadata(String file) {
@@ -104,7 +127,7 @@ public class ConversionService {
         // processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         processBuilder.directory(workDir.toFile());
         // HACK: this is used only in development
-        processBuilder.environment().put("EBOOKS_DIR", workDir.toAbsolutePath().toString());
+        processBuilder.environment().put("CONVERTED_DATA_DIR", workDir.getFileName().toString());
         var process = processBuilder.start();
         var output = process.getInputStream();
         var errorOutput = process.getErrorStream();

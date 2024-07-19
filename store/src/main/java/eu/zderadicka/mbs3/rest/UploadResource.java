@@ -1,4 +1,4 @@
-package eu.zderadicka.mbs3;
+package eu.zderadicka.mbs3.rest;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,12 +10,14 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import eu.zderadicka.mbs3.data.ConfirmUpload;
 import eu.zderadicka.mbs3.data.FinalFileInfo;
 import eu.zderadicka.mbs3.data.TmpFileInfo;
+import eu.zderadicka.mbs3.service.FileService;
 import io.quarkus.logging.Log;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -99,12 +101,18 @@ public class UploadResource {
     public Response getTemporaryFile(String file) {
 
         var filePath = fileService.getTemporaryPath(file);
-        if (!Files.exists(filePath)) {
+        return Utils.filResponse(filePath);
+
+    }
+
+    @DELETE
+    @Path("temporary/{file}")
+    public Response deleteTemporaryFile(String file) {
+        if (fileService.deleteTemporaryFile(file)) {
+            return Response.ok().build();
+        } else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-
-        return Response.ok(filePath).build();
-
     }
 
 }

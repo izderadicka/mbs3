@@ -1,9 +1,8 @@
-package eu.zderadicka.mbs3;
+package eu.zderadicka.mbs3.service;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -19,7 +18,6 @@ import eu.zderadicka.mbs3.data.FinalFileInfo;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class FileService {
@@ -139,6 +137,9 @@ public class FileService {
     }
 
     private void deleteFilesOlderThan(Path dir, int daysOld) throws IOException {
+        if (!Files.exists(dir)) {
+            return;
+        }
         Instant oldDate = Instant.now().minus(daysOld, ChronoUnit.DAYS);
         Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
             @Override
@@ -149,6 +150,17 @@ public class FileService {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    public boolean deleteTemporaryFile(String file) {
+       var path = getTemporaryPath(file);
+        try {
+            Files.delete(path);
+            return true;
+        } catch (IOException e) {
+            Log.error("Error deleting temporary file", e);
+            return false;
+        }
     }
 
 }

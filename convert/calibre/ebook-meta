@@ -2,5 +2,6 @@
 
 # get script directory
 SCRIPT_DIR=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
+DATA_DIR=${CONVERTED_DATA_DIR:-/test-data}
 # echo "SCRIPT_DIR: $SCRIPT_DIR"
-docker run --rm -u $(id -u):$(id -g) -v $SCRIPT_DIR/../test-data:/ebooks calibre ebook-meta "$@"
+docker run --rm -u $(id -u):$(id -g) -v $SCRIPT_DIR/../${DATA_DIR}:/ebooks calibre ebook-meta "$@"

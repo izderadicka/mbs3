@@ -1,8 +1,9 @@
-package eu.zderadicka.mbs3;
+package eu.zderadicka.mbs3.rest;
 
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
+import eu.zderadicka.mbs3.service.FileService;
 import jakarta.ws.rs.core.Response;
 
 public class ErrorMapping {
