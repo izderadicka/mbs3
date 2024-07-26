@@ -2,12 +2,15 @@ package eu.zderadicka.mbs3;
 
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import eu.zderadicka.mbs3.client.UploadServiceClient;
-import eu.zderadicka.mbs3.data.MetaRequest;
+import eu.zderadicka.mbs3.data.Meta;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -26,27 +29,28 @@ public class ConversionResource {
     @Inject
     ConversionService conversionService;
 
+    @Inject
+    @Channel("meta-requests")
+    Emitter<Meta.Job> metaEmitter;
+
     @POST
     @Path("metadata")
     @Produces(MediaType.TEXT_PLAIN)
-    public CompletionStage<String> metadata(MetaRequest request) {
+    public CompletionStage<String> metadata(Meta.Request request) {
         return conversionService.extractMetadata(request.file());
     }
 
     @POST
     @Path("metadata2")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
-    public CompletionStage<String> metadata2(MetaRequest request) {
-        var resp = uploadService.downloadTemporaryFile(request.file());
-        var bodyStream = resp.readEntity(InputStream.class);
-        var ext = Utils.getFileExtension(request.file());
-        var file = conversionService.extractMetadata(bodyStream, ext, resp.getHeaderString("Content-Type"));
-       // save resp to file
+    public Meta.Confirmation metadata2(Meta.Request request) {
+        var jobId = UUID.randomUUID().toString();
 
-        // conversionService.extractMetadata(null)
+        metaEmitter.send(new Meta.Job(jobId, request));
+        return new Meta.Confirmation(jobId);
 
-        //return downloadedFile.onItem().transform(path -> path.toString());
-        return file;
+
+        
     }
 }

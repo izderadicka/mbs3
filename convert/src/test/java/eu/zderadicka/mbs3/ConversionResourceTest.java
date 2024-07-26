@@ -4,7 +4,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
-import eu.zderadicka.mbs3.data.MetaRequest;
+import eu.zderadicka.mbs3.data.Meta;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
@@ -16,7 +16,7 @@ public class ConversionResourceTest {
     @Test
     public void testMetaEndpoint() {
         given()
-            .body(new MetaRequest("doyle.epub",false))
+            .body(new Meta.Request("doyle.epub",false))
             .header("Content-Type", "application/json")
           .when().post("/metadata")
           .then()

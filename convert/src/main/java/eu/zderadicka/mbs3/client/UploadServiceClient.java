@@ -17,7 +17,7 @@ public interface UploadServiceClient {
 
     @Path("/temporary/{file}")
     @GET
-    public Response downloadTemporaryFile(@PathParam("file") String file);
+    public Uni<Response> downloadTemporaryFile(@PathParam("file") String file);
 
     @DELETE
     @Path("temporary/{file}")

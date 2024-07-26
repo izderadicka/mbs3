@@ -1,7 +1,8 @@
 package eu.zderadicka.mbs3;
 
+import static eu.zderadicka.mbs3.Utils.guessExtension;
+
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -10,16 +11,21 @@ import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import eu.zderadicka.mbs3.client.UploadServiceClient;
+import eu.zderadicka.mbs3.data.Meta;
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import static eu.zderadicka.mbs3.Utils.guessExtension;
 
 @ApplicationScoped
 public class ConversionService {
@@ -32,6 +38,10 @@ public class ConversionService {
 
     @Inject
     private Vertx vertx;
+
+    @Inject
+    @RestClient
+    private UploadServiceClient uploadService;
 
     public CompletableFuture<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
         var name = UUID.randomUUID().toString();
@@ -57,6 +67,40 @@ public class ConversionService {
 
         return future;
 
+    }
+
+
+    private static record Resolvedresponse(InputStream body, String contenType) {
+    }
+
+    @Incoming("meta-requests")
+    @Outgoing("meta-responses")
+    public Uni<String> extractMetadata(Meta.Job job) {
+        var file = job.request().file();
+        Log.info("Got metadata request: " + file);
+        var ext = Utils.getFileExtension(file);
+        return uploadService.downloadTemporaryFile(file)
+        .map(resp -> {
+        var bodyStream = resp.readEntity(InputStream.class);
+        var contentType = resp.getHeaderString("Content-Type");
+        return new Resolvedresponse(bodyStream, contentType);})
+        .chain(resp -> {
+            var bodyStream = resp.body();
+            var contentType = resp.contenType();
+            var metaFuture = extractMetadata(bodyStream, ext, contentType);
+            return Uni.createFrom().completionStage(metaFuture);
+        });
+
+
+        
+        
+        
+       // save resp to file
+
+        // conversionService.extractMetadata(null)
+
+        //return downloadedFile.onItem().transform(path -> path.toString());
+        // return file;
     }
 
     public CompletableFuture<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,

@@ -25,6 +25,7 @@ services:
     restart: always
 
   store:
+    restart: always
     image: izderadicka/mbs3-store:1.0.0-SNAPSHOT
     ports:
       - 8843:4043
