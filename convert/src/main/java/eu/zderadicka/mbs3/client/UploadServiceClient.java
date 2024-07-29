@@ -1,7 +1,5 @@
 package eu.zderadicka.mbs3.client;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import io.smallrye.mutiny.Uni;
@@ -22,5 +20,5 @@ public interface UploadServiceClient {
     @DELETE
     @Path("temporary/{file}")
     public Response deleteTemporaryFile(String file);
-    
+
 }

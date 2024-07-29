@@ -9,7 +9,6 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import eu.zderadicka.mbs3.client.UploadServiceClient;
 import eu.zderadicka.mbs3.data.Meta;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -23,10 +22,6 @@ import jakarta.ws.rs.core.MediaType;
 public class ConversionResource {
 
     @Inject
-    @RestClient
-    UploadServiceClient uploadService;
-
-    @Inject
     ConversionService conversionService;
 
     @Inject
@@ -36,8 +31,8 @@ public class ConversionResource {
     @POST
     @Path("metadata")
     @Produces(MediaType.TEXT_PLAIN)
-    public CompletionStage<String> metadata(Meta.Request request) {
-        return conversionService.extractMetadata(request.file());
+    public Uni<String> metadata(Meta.Request request) {
+        return conversionService.runEbookMeta(request.file());
     }
 
     @POST
@@ -50,7 +45,5 @@ public class ConversionResource {
         metaEmitter.send(new Meta.Job(jobId, request));
         return new Meta.Confirmation(jobId);
 
-
-        
     }
 }

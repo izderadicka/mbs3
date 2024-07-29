@@ -7,11 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -21,11 +19,16 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import eu.zderadicka.mbs3.client.UploadServiceClient;
 import eu.zderadicka.mbs3.data.Meta;
+import io.cloudonix.vertx.javaio.OutputToReadStream;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.Vertx;
+import io.vertx.core.file.OpenOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.core.streams.ReadStream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.GenericEntity;
 
 @ApplicationScoped
 public class ConversionService {
@@ -40,10 +43,13 @@ public class ConversionService {
     private Vertx vertx;
 
     @Inject
+    private io.vertx.core.Vertx vertx2;
+
+    @Inject
     @RestClient
     private UploadServiceClient uploadService;
 
-    public CompletableFuture<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
+    public Uni<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
         var name = UUID.randomUUID().toString();
         Optional<String> ext = maybeExt.or(() -> guessExtension(mimeType));
         final String fileName;
@@ -52,23 +58,39 @@ public class ConversionService {
         } else {
             fileName = name;
         }
+        var tmpFile = workDir.resolve(fileName);
+        var fileOptiones = new OpenOptions().setCreate(true).setWrite(true);
+        var future = vertx2.fileSystem().open(tmpFile.toString(), fileOptiones)
+                .compose(f -> {
+                    var stream = new OutputToReadStream(vertx2);
+                    return stream.pipeFromInput(data, f)
+                            .onComplete(_x -> {
+                                try {
+                                    stream.close();
+                                } catch (IOException e) {
+                                    Log.error("Error closing stream", e);
+                                }
+                            });
+                })
+                .map(_x -> fileName);
 
-        CompletableFuture<String> future = executor.newIncompleteFuture();
-        executor.execute(() -> {
-            try {
-                Path tmpFile = workDir.resolve(fileName);
-                Files.copy(data, tmpFile, StandardCopyOption.REPLACE_EXISTING);
-                future.complete(fileName);
-            } catch (Exception e) {
-                Log.error("Error", e);
-                future.completeExceptionally(e);
-            }
-        });
+        return Uni.createFrom().completionStage(future.toCompletionStage());
 
-        return future;
+        // CompletableFuture<String> future = executor.newIncompleteFuture();
+        // executor.execute(() -> {
+        // try {
+        // Path tmpFile = workDir.resolve(fileName);
+        // Files.copy(data, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+        // future.complete(fileName);
+        // } catch (Exception e) {
+        // Log.error("Error", e);
+        // future.completeExceptionally(e);
+        // }
+        // });
+
+        // return Uni.createFrom().completionStage(future);
 
     }
-
 
     private static record Resolvedresponse(InputStream body, String contenType) {
     }
@@ -80,52 +102,41 @@ public class ConversionService {
         Log.info("Got metadata request: " + file);
         var ext = Utils.getFileExtension(file);
         return uploadService.downloadTemporaryFile(file)
-        .map(resp -> {
-        var bodyStream = resp.readEntity(InputStream.class);
-        var contentType = resp.getHeaderString("Content-Type");
-        return new Resolvedresponse(bodyStream, contentType);})
-        .chain(resp -> {
-            var bodyStream = resp.body();
-            var contentType = resp.contenType();
-            var metaFuture = extractMetadata(bodyStream, ext, contentType);
-            return Uni.createFrom().completionStage(metaFuture);
-        });
-
-
-        
-        
-        
-       // save resp to file
-
-        // conversionService.extractMetadata(null)
-
-        //return downloadedFile.onItem().transform(path -> path.toString());
-        // return file;
+                .map(resp -> {
+                    var bodyStream = resp.readEntity(InputStream.class);
+                    // var asyncStream = new OutputTo
+                    var contentType = resp.getHeaderString("Content-Type");
+                    return new Resolvedresponse(bodyStream, contentType);
+                })
+                .chain(resp -> {
+                    var bodyStream = resp.body();
+                    var contentType = resp.contenType();
+                    var metaFuture = extractMetadata(bodyStream, ext, contentType);
+                    return metaFuture;
+                });
     }
 
-    public CompletableFuture<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,
+    public Uni<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,
             String mimeType) {
 
         return createTmpFile(dataStream, maybeExt, mimeType)
-                .thenCompose(file -> {
-                    var future = extractMetadata(file);
-                    future.thenRun(() -> {
-                        try {
-                            Files.delete(workDir.resolve(file));
-                        } catch (IOException e) {
-                            Log.error("Cannot delete file ", e);
-                        }
-                    });
-                    return future;
-                })
-
-        ;
+                .chain(file -> {
+                    return runEbookMeta(file)
+                            .invoke(() -> {
+                                try {
+                                    Files.delete(workDir.resolve(file));
+                                } catch (IOException e) {
+                                    Log.error("Cannot delete file ", e);
+                                }
+                            });
+                });
 
     }
 
-    public CompletableFuture<String> extractMetadata(String file) {
+    public Uni<String> runEbookMeta(String file) {
         String[] command = new String[] { "ebook-meta", file };
-        return executeCommandAsync(command);
+        var future = executeCommandAsync(command);
+        return Uni.createFrom().completionStage(future);
     }
 
     private CompletableFuture<String> executeCommandAsync(String[] command) {
@@ -163,6 +174,10 @@ public class ConversionService {
 
         public String errorOutput() {
             return errorOutput;
+        }
+
+        public int exitCode() {
+            return exitCode;
         }
     }
 
