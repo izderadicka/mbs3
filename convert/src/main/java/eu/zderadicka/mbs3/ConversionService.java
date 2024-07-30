@@ -7,28 +7,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import eu.zderadicka.mbs3.client.UploadServiceClient;
 import eu.zderadicka.mbs3.data.Meta;
-import io.cloudonix.vertx.javaio.OutputToReadStream;
 import io.quarkus.logging.Log;
+import io.quarkus.virtual.threads.VirtualThreads;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.file.OpenOptions;
-import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.core.streams.ReadStream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.GenericEntity;
 
 @ApplicationScoped
 public class ConversionService {
@@ -37,19 +35,14 @@ public class ConversionService {
     private Path workDir;
 
     @Inject
-    private ManagedExecutor executor;
-
-    @Inject
-    private Vertx vertx;
-
-    @Inject
-    private io.vertx.core.Vertx vertx2;
+    @VirtualThreads
+    private ExecutorService executor;
 
     @Inject
     @RestClient
     private UploadServiceClient uploadService;
 
-    public Uni<String> createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) {
+    public String createTmpFile(InputStream data, Optional<String> maybeExt, String mimeType) throws IOException {
         var name = UUID.randomUUID().toString();
         Optional<String> ext = maybeExt.or(() -> guessExtension(mimeType));
         final String fileName;
@@ -59,36 +52,9 @@ public class ConversionService {
             fileName = name;
         }
         var tmpFile = workDir.resolve(fileName);
-        var fileOptiones = new OpenOptions().setCreate(true).setWrite(true);
-        var future = vertx2.fileSystem().open(tmpFile.toString(), fileOptiones)
-                .compose(f -> {
-                    var stream = new OutputToReadStream(vertx2);
-                    return stream.pipeFromInput(data, f)
-                            .onComplete(_x -> {
-                                try {
-                                    stream.close();
-                                } catch (IOException e) {
-                                    Log.error("Error closing stream", e);
-                                }
-                            });
-                })
-                .map(_x -> fileName);
 
-        return Uni.createFrom().completionStage(future.toCompletionStage());
-
-        // CompletableFuture<String> future = executor.newIncompleteFuture();
-        // executor.execute(() -> {
-        // try {
-        // Path tmpFile = workDir.resolve(fileName);
-        // Files.copy(data, tmpFile, StandardCopyOption.REPLACE_EXISTING);
-        // future.complete(fileName);
-        // } catch (Exception e) {
-        // Log.error("Error", e);
-        // future.completeExceptionally(e);
-        // }
-        // });
-
-        // return Uni.createFrom().completionStage(future);
+        Files.copy(data, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
 
     }
 
@@ -119,7 +85,10 @@ public class ConversionService {
     public Uni<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,
             String mimeType) {
 
-        return createTmpFile(dataStream, maybeExt, mimeType)
+        new CompletableFuture<String>();
+        var future = executor.submit(() -> createTmpFile(dataStream, maybeExt, mimeType));
+
+        return Uni.createFrom().future(future)
                 .chain(file -> {
                     return runEbookMeta(file)
                             .invoke(() -> {
@@ -136,20 +105,11 @@ public class ConversionService {
     public Uni<String> runEbookMeta(String file) {
         String[] command = new String[] { "ebook-meta", file };
         var future = executeCommandAsync(command);
-        return Uni.createFrom().completionStage(future);
+        return Uni.createFrom().future(future);
     }
 
-    private CompletableFuture<String> executeCommandAsync(String[] command) {
-        var future = new CompletableFuture<String>();
-        executor.execute(() -> {
-            try {
-                var result = runProcess(command);
-                future.complete(result);
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-        });
-        return future;
+    private Future<String> executeCommandAsync(String[] command) {
+        return executor.submit(() -> runProcess(command));
     }
 
     private static void readStream(InputStream output, StringBuilder result) throws IOException {
@@ -195,19 +155,17 @@ public class ConversionService {
         // read output
 
         var errorResult = new StringBuilder();
-        var errorThread = new Thread(() -> {
+        var future = executor.submit(() -> {
             try {
                 readStream(errorOutput, errorResult);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Log.error("Cannot read error stream", e);
             }
         });
         readStream(output, result);
-        errorThread.start();
         try {
             int exitCode = process.waitFor();
-            errorThread.join();
+            future.get();
 
             if (exitCode != 0) {
                 var errorLog = errorResult.toString();
@@ -216,7 +174,9 @@ public class ConversionService {
             }
         } catch (InterruptedException e) {
             process.destroy();
-            throw new IOException("Interrupted while waing for process", e);
+            Log.error("Process interrupted", e);
+        } catch (ExecutionException e) {
+            Log.error("Error in reader of stderr", e);
         }
 
         return result.toString();
