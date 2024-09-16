@@ -77,13 +77,13 @@ public class ConversionService {
                 .chain(resp -> {
                     var bodyStream = resp.body();
                     var contentType = resp.contenType();
-                    var metaFuture = extractMetadata(bodyStream, ext, contentType);
+                    var metaFuture = extractMetadata(bodyStream, ext, contentType, job.request().extractCover());
                     return metaFuture;
                 });
     }
 
     public Uni<String> extractMetadata(InputStream dataStream, Optional<String> maybeExt,
-            String mimeType) {
+            String mimeType, boolean extractCover) {
 
         new CompletableFuture<String>();
         var future = executor.submit(() -> createTmpFile(dataStream, maybeExt, mimeType));
